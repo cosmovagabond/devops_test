@@ -1,0 +1,72 @@
+version: "3"
+
+# This Taskfile is used to manage the lifecycle of a PostgreSQL database container
+vars:
+  IMAGE_REPO: sidpalas/devops-directive-kubernetes-course-db-migrator
+  IMAGE_TAG: foobarbaz
+
+tasks:
+  run-postgres:
+    desc: Start postgres container
+    cmds:
+      - echo Starting postgres container
+      - docker run -e POSTGRES_PASSWORD=foobarbaz -v pgdata:/var/lib/postgresql/data -p 5432:5432 postgres:16.3-alpine
+
+  run-psql-init-script:
+    desc: Execute psql commands
+    cmds:
+      - |
+        CONTAINER_ID=$(docker ps -q --filter "ancestor=postgres:16.3-alpine")
+        docker cp ./migrations/000001_create_users_table.up.sql $CONTAINER_ID:/tmp/
+        docker exec $CONTAINER_ID psql -U "postgres" -f /tmp/000001_create_users_table.up.sql
+
+  build-container-image:
+    desc: Build container image
+    cmds:
+      - docker build -t {{.IMAGE_REPO}}{{.IMAGE_TAG}} .
+
+  build-container-image-multi-arch:
+    desc: Build multi-arch container image
+    cmds:
+      - |
+        docker buildx build \
+        --platform linux/amd64,linux/arm64 \
+        -t {{.IMAGE_REPO}}:{{.IMAGE_TAG}} \
+        --push \
+        .
+
+#golang api
+version: "3"
+
+vars:
+  DATABASE_URL: "postgres://postgres:foobarbaz@localhost:5432/postgres"
+  IMAGE_REPO: sidpalas/devops-directive-docker-course-api-golang
+  IMAGE_TAG: foobarbaz
+
+tasks:
+  install:
+    desc: "download dependencies"
+    cmds:
+      - go mod tidy
+
+  run:
+    desc: "download dependencies"
+    cmds:
+      - echo $PWD
+      - ls
+      - DATABASE_URL={{.DATABASE_URL}} go run main.go
+
+  build-container-image:
+    desc: Build container image
+    cmds:
+      - |
+        KO_DOCKER_REPO='{{.IMAGE_REPO}}' \
+          ko build \
+          --bare \
+          --tags={{.IMAGE_TAG}} \
+          --platform=all
+
+  build-container-image-multi-arch:
+    desc: Build multi-arch container image
+    cmds:
+      - task: build-container-image

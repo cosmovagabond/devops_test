@@ -4,17 +4,26 @@
 
 2. CODE (IN PROGRESS)
     (GitHub/Gitlab)
-    - Github Actions for CI/CD processes
+    - Github Actions for CI/CD processes 
         - build-and-test for every pull
             -test.yml in .github/workflow
             -requirements.txt for dependencies of ACTION
 
+    - A minimal 3 tier web app for demo purpose (Functional)
+        - React front end (functional)
+        - Golang API (compiled so can test auto build) (functional) (go.mod?)
+        - Python API and load generator (functional)
+        - PostgreSQL database (DONE)
+
 3. BUILD (NOT STARTED)
     (webpack?)
+    - pyproject.toml for poetry installing python dep
 
 4. TEST (IN PROGRESS)
     (Jest/Playwright/Junit)
-    - automated code testing via Github Action (Done)
+    - automated code testing via Github Action (in progress)
+        - python (DONE)
+        - GO (not started)
 
 5. RELEASE (NOT STARTED)
     (Jenkins/Buildkite)
