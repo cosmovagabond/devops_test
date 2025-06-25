@@ -1,6 +1,6 @@
 import pg8000.dbapi
 from datetime import datetime
-import load_generator
+from . import load_generator
 
 # --- Connection Details (replace with your actual credentials) ---
 DB_USER = "postgres"
