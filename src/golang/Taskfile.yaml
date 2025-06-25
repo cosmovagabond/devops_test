@@ -2,8 +2,8 @@ version: "3"
 
 vars:
   DATABASE_URL: "postgres://postgres:youshallnotpass@localhost:5432/postgres"
-  IMAGE_REPO: cosmovagabond/k8s_test
-  IMAGE_TAG: golang
+  IMAGE_REPO: cosmovagabond/k8s-test-golang
+  IMAGE_TAG: devops_test
 
 tasks:
   install:
@@ -18,7 +18,7 @@ tasks:
       - ls
       - DATABASE_URL={{.DATABASE_URL}} go run main.go
 
-  build-container-image:
+  build-container-image-ko:
     desc: Build container image
     cmds:
       - |
@@ -27,6 +27,11 @@ tasks:
           --bare \
           --tags={{.IMAGE_TAG}} \
           --platform=all
+
+  build-container-image:
+    desc: Build container image
+    cmds:
+      - docker build -t {{.IMAGE_REPO}}:{{.IMAGE_TAG}} --push .
 
   build-container-image-multi-arch:
     desc: Build multi-arch container image
