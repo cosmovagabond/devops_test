@@ -23,9 +23,10 @@ function CurrentTime(props) {
   return (
     <div className="App">
       <p>---</p>
-      <p>Caller: {data.callerID}</p>
+      <p>API: {data.api}</p>
       <p>Time from DB: {data.currentTime}</p>
       <p>Request Count: {data.requestCount}</p>
+      <p>Python Run Count: {data.pythonCount}</p>
       <div>{isFetching ? "Updating..." : ""}</div>
     </div>
   );
@@ -36,7 +37,6 @@ export function App() {
     <QueryClientProvider client={queryClient}>
       <h1>Hello World!</h1>
       <CurrentTime api="/api/golang/" />
-      <CurrentTime api="/api/python/" />
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );

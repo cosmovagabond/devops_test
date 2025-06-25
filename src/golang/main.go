@@ -35,19 +35,21 @@ func main() {
 	r := gin.Default()
 	var tm time.Time
 	var reqCount int
+	var pyCount int
 
 	r.GET("/", func(c *gin.Context) {
 		database.InsertView(c)
-		tm, reqCount = database.GetTimeAndRequestCount(c)
+		tm, reqCount, pyCount = database.GetTimeAndRequestCount(c)
 		c.JSON(200, gin.H{
-			"callerID":          "go",
+			"api":          "go",
 			"currentTime":  tm,
 			"requestCount": reqCount,
+			"pythonCount":  pyCount,
 		})
 	})
 
 	r.GET("/ping", func(c *gin.Context) {
-		_, _ = database.GetTimeAndRequestCount(c)
+		_, _, _ = database.GetTimeAndRequestCount(c)
 		c.JSON(200, "pong")
 	})
 

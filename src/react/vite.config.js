@@ -15,6 +15,12 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api\/golang/, ""),
         secure: false,
       },
+      "/api/node": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/python/, ""),
+        secure: false,
+      },
     },
   },
 });

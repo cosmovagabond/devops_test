@@ -9,10 +9,10 @@
             -test.yml in .github/workflow
             -requirements.txt for dependencies of ACTION
 
-    - A minimal 3 tier web app for demo purpose (Functional)
-        - React front end (functional)
-        - Golang API (compiled so can test auto build) (functional) (go.mod?)
-        - Python API and load generator (functional)
+    - A minimal 3 tier web app for demo purpose (DONE)
+        - React front end (DONE)
+        - Golang API (compiled so can test auto build) (DONE)
+        - Python SQL call and load generator (DONE)
         - PostgreSQL database (DONE)
 
 3. BUILD (NOT STARTED)

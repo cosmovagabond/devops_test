@@ -23,20 +23,22 @@ func InitDB(connString string) error {
 }
 
 func InsertView(ctx *gin.Context) {
-	_, err := pool.Exec(ctx, "INSERT INTO request (caller_id) VALUES ('go');")
+	_, err := pool.Exec(ctx, "INSERT INTO request (api_name) VALUES ('go');")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Query failed: %v\n", err)
 		os.Exit(1)
 	}
 }
 
-func GetTimeAndRequestCount(ctx *gin.Context) (time.Time, int) {
+func GetTimeAndRequestCount(ctx *gin.Context) (time.Time, int, int) {
 	var tm time.Time
 	var reqCount int
-	err := pool.QueryRow(ctx, "SELECT NOW() AS current_time, COUNT(*) AS request_count FROM public.request WHERE caller_id = 'go';").Scan(&tm, &reqCount)
+	var pyCount int
+	err := pool.QueryRow(ctx, "SELECT NOW() AS current_time, COUNT(*) AS request_count FROM public.request WHERE api_name = 'go';").Scan(&tm, &reqCount)
+	pool.QueryRow(ctx, "SELECT python_count FROM public.request WHERE api_name = 'go'").Scan(&pyCount)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
 		os.Exit(1)
 	}
-	return tm, reqCount
+	return tm, reqCount, pyCount
 }

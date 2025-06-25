@@ -24,12 +24,12 @@ def signal_handler(signum, frame):
     logging.info(f"Received signal {signum}, terminating...")
     terminate = True
 
-if __name__ == "__main__":
+def run():
     # Configure logging
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
     # Read environment variables
-    api_url = os.getenv('API_URL', 'http://localhost:8000/')
+    api_url = os.getenv('API_URL')
     delay_ms = float(os.getenv('DELAY_MS', 1000))  # Default delay to 1000 milliseconds if not set
 
     if not api_url:
@@ -42,3 +42,7 @@ if __name__ == "__main__":
 
     logging.info(f"Starting load generator for {api_url} with a delay of {delay_ms} milliseconds between requests.")
     run_load_generator(api_url, delay_ms)
+
+
+if __name__ == "__main__":
+    run()
