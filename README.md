@@ -30,6 +30,8 @@
 
 6. DEPLOY (NOT STARTED)
     - manual docker build pushing to dockerHub (DONE)
+    - gcp deployment via kubernetes (DONE)
+        - tried kind local deployment, there's issue with kind's load balancer not routing ports correctly (web 80 is not routing to 8000 for api call)
 
 7. OPERATE (IN PROGRESS)
     (kubernetes)
