@@ -13,4 +13,4 @@ FROM python:3.12-slim AS production
 COPY --from=generate-requirements /requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . . 
-CMD ["python", "main.py", "setup_and_update_metrics", "run_load_generator"]
+CMD ["python", "main.py", "run"]

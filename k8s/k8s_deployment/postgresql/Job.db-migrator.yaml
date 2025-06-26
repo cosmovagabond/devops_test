@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migrator
+  namespace: welcome-webapp
+spec:
+  template:
+    spec:
+      containers:
+        - name: migrate
+          image: cosmovagabond/k8s-test-postgres:devops_test
+          args:
+            - -path=/app/migrations
+            - -database=$(DATABASE_URL)?sslmode=disable
+            - up
+          envFrom:
+            - secretRef:
+                name: db-password
+      restartPolicy: OnFailure

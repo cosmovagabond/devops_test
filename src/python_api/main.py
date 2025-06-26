@@ -1,73 +1,104 @@
-import pg8000.dbapi
+import psycopg2
 from datetime import datetime
-from . import load_generator
-
-# --- Connection Details (replace with your actual credentials) ---
-DB_USER = "postgres"
-DB_PASS = "youshallnotpass"
-DB_HOST = "localhost"       # e.g., 'localhost' or an IP address
-DB_PORT = 5432              # Default PostgreSQL port
-DB_NAME = "postgres"
-
-def setup_and_update_metrics():
-    """
-    Connects to the database, ensures the table exists, and then creates or
-    updates the metrics for the 'python' API.
-    """
-    conn = None
-    api_to_track = "python"
-    
-    print("--- Starting API Metrics Update ---")
-    print(f"Target API: {api_to_track}")
-    
-    try:
-        # 1. Connect to the PostgreSQL database
-        print("Connecting to the database...")
-        conn = pg8000.dbapi.connect(
-            user=DB_USER,
-            password=DB_PASS,
-            host=DB_HOST,
-            port=DB_PORT,
-            database=DB_NAME
-        )
-        print("Connection successful.")
-        cursor = conn.cursor()
-
-        cursor.execute("SELECT python_count FROM public.request WHERE api_name='go'")
-        python_count = cursor.fetchone()[0] + 1
-
-        upsert_query = """
-            UPDATE request SET python_count = {} WHERE api_name='go'
-        """.format(python_count)
-        cursor.execute(upsert_query)
+import os
+import time
+import requests
+import signal
+import sys
+import logging
         
-        # 4. Commit the transaction to save the changes
-        conn.commit()
-        #print("Transaction committed successfully.")
+terminate = False
+DATABASE_URL = "postgres://postgres:youshallnotpass@postgres-postgresql.postgres.svc.cluster.local:5432/postgres"
 
 
-    except pg8000.dbapi.Error as e:
-        print(e)
-        print(f"\n[ERROR] A database error occurred: {e}")
-        if conn:
-            # Roll back the transaction on error
-            conn.rollback()
-            print("Transaction has been rolled back.")
-            
+def execute_query(query, params=None, fetch=None):
+    """
+    A helper function to connect, execute a query, and handle resources.
+    - query: The SQL query string to execute.
+    - params: A tuple of parameters to safely pass to the query.
+    - fetch: "one", "all", or None to specify if we should fetch results.
+    """
+    try:
+        # The 'with' statement ensures the connection is always closed
+        with psycopg2.connect(DATABASE_URL) as conn:
+            # The 'with' statement ensures the cursor is always closed
+            with conn.cursor() as cur:
+                # Use parameterized queries to prevent SQL injection
+                cur.execute(query, params)
+                
+                # Commit the transaction for write operations
+                if fetch is None:
+                    conn.commit()
+                    logging.info("Query executed and transaction committed.")
+                    return True
+
+                logging.info("Query executed successfully.")
+                if fetch == "one":
+                    return cur.fetchone()
+                if fetch == "all":
+                    return cur.fetchall()
+
+    except psycopg2.OperationalError as e:
+        logging.info(f"Connection Error: Could not connect to the database at '{DATABASE_URL}'.")
+        logging.info(f"Detail: {e}")
     except Exception as e:
-        print(f"\n[ERROR] An unexpected error occurred: {e}")
+        logging.info(f"An error occurred: {e}")
+    return None
 
-    finally:
-        if conn:
-            # 6. Close the connection
-            conn.close()
-            print("\nDatabase connection closed.")
+def add_python_count():
+    logging.info(os.environ)
+    query = "SELECT python_count FROM public.request WHERE api_name='go'"
+    logging.info ("query: {}".format(query))
+    result = execute_query(query, fetch="one")
+    logging.info ("result: {}".format(result))
+    if result:
+        count = int(result[0]) + 1    
+        logging.info ("count: {}".format(count))
+        upsert_query = "UPDATE public.request SET python_count = {} WHERE api_name='go'".format(count)
+        logging.info ("upsert_query: {}".format(upsert_query))
+        execute_query(upsert_query)
 
-def run_load_generator():
-    load_generator.run()
+def run_load_generator(api_url, delay_ms):
+    global terminate
+    while not terminate:
+        try:
+            response = requests.get(api_url)
+            logging.info(f"Request to {api_url} completed with status code {response.status_code}")
+        except requests.RequestException as e:
+            logging.error(f"Request to {api_url} failed: {e}")
+        
+        time.sleep(delay_ms / 1000.0)
+    logging.info("Load generator terminated gracefully.")
+
+def signal_handler(signum, frame):
+    global terminate
+    logging.info(f"Received signal {signum}, terminating...")
+    terminate = True
+
+def run():
+    # Configure logging
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+    # Read environment variables
+    api_url = os.getenv('API_URL')
+    delay_ms = float(os.getenv('DELAY_MS', 1000))  # Default delay to 1000 milliseconds if not set
+
+    if not api_url:
+        logging.error("Error: API_URL environment variable is not set.")
+        sys.exit(1)
+
+    logging.info("running add_python_count")
+    add_python_count()
+
+    # Set up signal handler
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+
+    logging.info(f"Starting load generator for {api_url} with a delay of {delay_ms} milliseconds between requests.")
+    run_load_generator(api_url, delay_ms)
 
 def for_testing():
     return "passed"
 
 if __name__ == "__main__":
-    setup_and_update_metrics()
+    run()

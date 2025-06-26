@@ -29,9 +29,9 @@
     (Jenkins/Buildkite)
 
 6. DEPLOY (NOT STARTED)
-    (docker)
+    - manual docker build pushing to dockerHub (DONE)
 
-7. OPERATE (NOT STARTED)
+7. OPERATE (IN PROGRESS)
     (kubernetes)
 
 8. MONITOR (NOT STARTED)
